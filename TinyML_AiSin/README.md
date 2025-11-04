@@ -21,7 +21,6 @@
   - pozioma oś „0”,
   - etykieta „AI_SIN”,
   - czas pojedynczej inferencji `t=… us`.
-  - <img width="1080" height="1920" alt="image" src="https://github.com/user-attachments/assets/66a2114b-84d1-4a3c-9a38-5510795ebf59" />
 
 
 ---
@@ -51,7 +50,9 @@
 
 
 
-https://github.com/user-attachments/assets/27451b43-5cb7-493d-a056-e30e20c5624c
+
+https://github.com/user-attachments/assets/c17c8d68-77ed-4d0f-9301-eb7e68390b83
+
 
 
 ---
