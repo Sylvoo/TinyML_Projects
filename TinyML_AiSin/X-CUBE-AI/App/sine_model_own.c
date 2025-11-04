@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine_model_own.c
   * @author  AST Embedded Analytics Research Platform
-  * @date    2025-11-04T12:42:16+0100
+  * @date    2025-11-04T14:36:59+0100
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * @attention
@@ -42,7 +42,7 @@
 #endif
 
 #undef AI_TOOLS_DATE_TIME
-#define AI_TOOLS_DATE_TIME   "2025-11-04T12:42:16+0100"
+#define AI_TOOLS_DATE_TIME   "2025-11-04T14:36:59+0100"
 
 #undef AI_TOOLS_COMPILE_TIME
 #define AI_TOOLS_COMPILE_TIME    __DATE__ " " __TIME__
@@ -385,7 +385,7 @@ AI_NETWORK_OBJ_DECLARE(
     224, NULL, NULL),
   AI_TENSOR_LIST_IO_OBJ_INIT(AI_FLAG_NONE, AI_SINE_MODEL_OWN_IN_NUM, &serving_default_keras_tensor_40_output),
   AI_TENSOR_LIST_IO_OBJ_INIT(AI_FLAG_NONE, AI_SINE_MODEL_OWN_OUT_NUM, &conversion_4_output),
-  &conversion_0_layer, 0xc31d0458, NULL)
+  &conversion_0_layer, 0x553b7a96, NULL)
 
 #else
 
@@ -405,7 +405,7 @@ AI_NETWORK_OBJ_DECLARE(
   ),
   AI_TENSOR_LIST_IO_OBJ_INIT(AI_FLAG_NONE, AI_SINE_MODEL_OWN_IN_NUM, &serving_default_keras_tensor_40_output),
   AI_TENSOR_LIST_IO_OBJ_INIT(AI_FLAG_NONE, AI_SINE_MODEL_OWN_OUT_NUM, &conversion_4_output),
-  &conversion_0_layer, 0xc31d0458, NULL)
+  &conversion_0_layer, 0x553b7a96, NULL)
 
 #endif	/*(AI_TOOLS_API_VERSION < AI_TOOLS_API_VERSION_1_5)*/
 
@@ -522,7 +522,7 @@ ai_bool ai_sine_model_own_get_info(
       .params            = AI_STRUCT_INIT,
       .activations       = AI_STRUCT_INIT,
       .n_nodes           = 0,
-      .signature         = 0xc31d0458,
+      .signature         = 0x553b7a96,
     };
 
     if (!ai_platform_api_get_network_report(network, &r)) return false;
@@ -570,7 +570,7 @@ ai_bool ai_sine_model_own_get_report(
       .map_weights       = AI_STRUCT_INIT,
       .map_activations   = AI_STRUCT_INIT,
       .n_nodes           = 0,
-      .signature         = 0xc31d0458,
+      .signature         = 0x553b7a96,
     };
 
     if (!ai_platform_api_get_network_report(network, &r)) return false;

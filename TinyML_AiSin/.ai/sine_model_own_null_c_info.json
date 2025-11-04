@@ -548,44 +548,44 @@
   ],
   "environment": {
     "generated_model": {
-      "generated_time": "2025-11-04T12:42:16+0100",
+      "generated_time": "2025-11-04T14:36:59+0100",
       "model_files": [
         {
           "name": "sine_model_own_data_params.h",
-          "signature": "0xbd25bcd9753c74801e7a8a1cb1b28e04"
+          "signature": "0xf3abadae04b8b2db130b96c4c1aa9a49"
         },
         {
           "name": "sine_model_own_data_params.c",
-          "signature": "0x75b16b0286f9a1eafe3bb4cfe4902ca4"
+          "signature": "0x4bbe461f7c509c28c31c102c04a1dd72"
         },
         {
           "name": "sine_model_own_data.h",
-          "signature": "0x051b5bdeab3306ab891c61251a32343a"
+          "signature": "0xece19abd50e8b6df827051a3351b39da"
         },
         {
           "name": "sine_model_own_data.c",
-          "signature": "0xcdd4ba1ccde3df3d7451425e2db1e315"
+          "signature": "0x3864114cb1e2364684ada7f60595c358"
         },
         {
           "name": "sine_model_own_config.h",
-          "signature": "0x622e31db8b393c93014bceb0149318e3"
+          "signature": "0xc11d0acb5607f4e414e423c3caf30cd3"
         },
         {
           "name": "sine_model_own.h",
-          "signature": "0x46af98309d9e6b501640497c82ef94eb"
+          "signature": "0xcdcefd9e1100fa88a219ecfdc3399271"
         },
         {
           "name": "sine_model_own.c",
-          "signature": "0xd097e1866579deba265bfe017e14daa9"
+          "signature": "0xf44138bd24bc28befa5ff889296f1b39"
         }
       ],
       "name": "sine_model_own"
     },
-    "network_signature": "0xc31d0458259845e9",
+    "network_signature": "0x553b7a96de09f15d",
     "test_name": "",
     "tools": [
       {
-        "arguments": "generate --target stm32f4 --name sine_model_own -m C:/Users/21syl/Downloads/sine_model_quantized (1).tflite --compression none --verbosity 1 --workspace C:/Users/21syl/AppData/Local/Temp/mxAI_workspace396582061570014225439113408319251 --output C:/Users/21syl/.stm32cubemx/sine_model_own_output",
+        "arguments": "generate --target stm32f4 --name sine_model_own -m C:/Users/21syl/Downloads/sine_model_quantized (1).tflite --compression none --verbosity 1 --workspace C:/Users/21syl/AppData/Local/Temp/mxAI_workspace10847582993100180734662376349106 --output C:/Users/21syl/.stm32cubemx/sine_model_own_output",
         "environment": [
           "STATS_TYPE=X-CUBE-AI"
         ],
