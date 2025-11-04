@@ -248,6 +248,8 @@ void TIM1_TRG_COM_TIM11_IRQHandler(void)
 void TIM1_CC_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_CC_IRQn 0 */
+	HAL_TIM_IRQHandler(&htim1);
+
 
   /* USER CODE END TIM1_CC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);

@@ -49,6 +49,35 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim11;
 
 /* USER CODE BEGIN PV */
+// --- Stepper 28BYJ-48 on ULN2003 ---
+#define STP_IN1_GPIO_Port   GPIOB
+#define STP_IN1_Pin         GPIO_PIN_0
+#define STP_IN2_GPIO_Port   GPIOB
+#define STP_IN2_Pin         GPIO_PIN_1
+#define STP_IN3_GPIO_Port   GPIOB
+#define STP_IN3_Pin         GPIO_PIN_2
+#define STP_IN4_GPIO_Port   GPIOB
+#define STP_IN4_Pin         GPIO_PIN_10
+
+// Konfiguracja: half-step (8 stanów)
+static const uint8_t stp_seq[8][4] = {
+  {1,0,0,0},
+  {1,1,0,0},
+  {0,1,0,0},
+  {0,1,1,0},
+  {0,0,1,0},
+  {0,0,1,1},
+  {0,0,0,1},
+  {1,0,0,1}
+};
+
+static volatile int      stp_idx = 0;
+static volatile int      stp_dir = 0;          // -1, 0, +1
+static volatile uint32_t stp_ticks = 0;        // odległość (w taktach timera) do następnego kroku
+static const float       STP_FMAX_HZ = 500.0f; // max pół-kroków/s (bezpieczne dla 28BYJ-48)
+static const float       STP_FMIN_HZ = 2.0f;   // próg „ruszenia”, żeby uniknąć zbyt wolnych kliknięć
+
+
 
 
 /* USER CODE END PV */
@@ -271,8 +300,8 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM2;
-  sConfigOC.Pulse = 0;
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 1000;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -418,6 +447,22 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(Led_GREEN_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  //__HAL_RCC_GPIOB_CLK_ENABLE();
+
+  GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull  = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStruct.Pin = STP_IN1_Pin; HAL_GPIO_Init(STP_IN1_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN2_Pin; HAL_GPIO_Init(STP_IN2_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN3_Pin; HAL_GPIO_Init(STP_IN3_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN4_Pin; HAL_GPIO_Init(STP_IN4_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(STP_IN1_GPIO_Port, STP_IN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN2_GPIO_Port, STP_IN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN3_GPIO_Port, STP_IN3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN4_GPIO_Port, STP_IN4_Pin, GPIO_PIN_RESET);
 
   /* USER CODE END MX_GPIO_Init_2 */
 }

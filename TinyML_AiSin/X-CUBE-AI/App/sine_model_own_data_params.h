@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    sine_model_own_data_params.h
   * @author  AST Embedded Analytics Research Platform
-  * @date    2025-11-04T14:36:59+0100
+  * @date    2025-11-04T15:51:31+0100
   * @brief   AI Tool Automatic Code Generator for Embedded NN computing
   ******************************************************************************
   * Copyright (c) 2025 STMicroelectronics.

@@ -58,6 +58,35 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim11;
 
 /* USER CODE BEGIN PV */
+// --- Stepper 28BYJ-48 on ULN2003 ---
+#define STP_IN1_GPIO_Port   GPIOB
+#define STP_IN1_Pin         GPIO_PIN_0
+#define STP_IN2_GPIO_Port   GPIOB
+#define STP_IN2_Pin         GPIO_PIN_1
+#define STP_IN3_GPIO_Port   GPIOB
+#define STP_IN3_Pin         GPIO_PIN_2
+#define STP_IN4_GPIO_Port   GPIOB
+#define STP_IN4_Pin         GPIO_PIN_10
+
+// Konfiguracja: half-step (8 stanów)
+static const uint8_t stp_seq[8][4] = {
+  {1,0,0,0},
+  {1,1,0,0},
+  {0,1,0,0},
+  {0,1,1,0},
+  {0,0,1,0},
+  {0,0,1,1},
+  {0,0,0,1},
+  {1,0,0,1}
+};
+
+static volatile int      stp_idx = 0;
+static volatile int      stp_dir = 0;          // -1, 0, +1
+static volatile uint32_t stp_ticks = 0;        // odległość (w taktach timera) do następnego kroku
+static const float       STP_FMAX_HZ = 500.0f; // max pół-kroków/s (bezpieczne dla 28BYJ-48)
+static const float       STP_FMIN_HZ = 2.0f;   // próg „ruszenia”, żeby uniknąć zbyt wolnych kliknięć
+
+
 
 /* USER CODE END PV */
 
@@ -147,6 +176,87 @@ static inline uint16_t pwm_from_y(float y, uint16_t arr)
     return (uint16_t)(t * (float)arr);
 }
 
+//////////////////////// stepmotor ///////////////////////
+
+// 1 MHz? 1.68 MHz? – liczona z aktualnych ustawień timera.
+// U Ciebie PSC=49 → tick = 84 MHz / (49+1) = 1.68 MHz.
+static inline uint32_t TIM1_TICK_HZ(void) {
+  uint32_t timclk = HAL_RCC_GetPCLK2Freq(); // TIM1 na APB2
+  // jeśli APB2 prescaler > 1 to timerclk = 2*PCLK2 (u Ciebie APB2=DIV1, więc bez mnożnika)
+  return timclk / (htim1.Init.Prescaler + 1);
+}
+
+static inline void Stepper_ApplyPhase(int idx) {
+  const uint8_t *ph = stp_seq[idx & 7];
+  HAL_GPIO_WritePin(STP_IN1_GPIO_Port, STP_IN1_Pin, ph[0]?GPIO_PIN_SET:GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN2_GPIO_Port, STP_IN2_Pin, ph[1]?GPIO_PIN_SET:GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN3_GPIO_Port, STP_IN3_Pin, ph[2]?GPIO_PIN_SET:GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN4_GPIO_Port, STP_IN4_Pin, ph[3]?GPIO_PIN_SET:GPIO_PIN_RESET);
+}
+
+static inline void Stepper_AllOff(void) {
+  HAL_GPIO_WritePin(STP_IN1_GPIO_Port, STP_IN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN2_GPIO_Port, STP_IN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN3_GPIO_Port, STP_IN3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN4_GPIO_Port, STP_IN4_Pin, GPIO_PIN_RESET);
+}
+
+// Wylicz prędkość z y_val i przelicz na odstęp czasowy (w tickach TIM1) między krokami.
+static inline void Stepper_SetFromAI(float y) {
+  float a = fabsf(y);
+  if (a < 0.001f) {
+    stp_dir   = 0;
+    Stepper_AllOff();
+    return;
+  }
+
+  stp_dir = (y >= 0.0f) ? +1 : -1;
+
+	// Skaluje |y| → [FMIN..FMAX]; poniżej FMIN – stop i off (żeby nie grzać cewek)
+	float f = STP_FMIN_HZ + (STP_FMAX_HZ - STP_FMIN_HZ) * a;
+	if (f < STP_FMIN_HZ) {
+	  stp_dir = 0;
+	  Stepper_AllOff();
+	  return;
+	}
+
+	uint32_t tick_hz = TIM1_TICK_HZ();        // np. 1_680_000 Hz
+	  uint32_t ticks   = (uint32_t)( (float)tick_hz / f );
+	  if (ticks < 200)  ticks = 200;            // górny limit prędkości (ochrona)
+	  if (ticks > 1000000) ticks = 1000000;     // dolny limit (unikaj overflow)
+
+	  stp_ticks = ticks;
+	}
+
+	// Jeden pół-krok (wołane z przerwania OC1)
+	static inline void Stepper_StepISR(void) {
+	  if (stp_dir == 0) return;
+	  stp_idx += stp_dir;
+	  Stepper_ApplyPhase(stp_idx);
+	}
+
+	// Callback od TIM1 OC1
+	void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
+	{
+	  if (htim->Instance == TIM1 && (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1))
+	  {
+	    uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim1);
+	    uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim1);
+
+	    // Jeżeli silnik stoi (stp_ticks = 0), daj mały odstęp, żeby timer nie umarł
+	    uint32_t step = stp_ticks ? stp_ticks : ((arr + 1) >> 1);
+
+	    // Oblicz nowy moment porównania z zawinięciem po ARR
+	    uint32_t next = (cnt + step) % (arr + 1);
+	    __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, next);
+
+	    Stepper_StepISR(); // wykonaj półkrok
+	  }
+	}
+
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -228,9 +338,16 @@ int main(void)
   MX_TIM11_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+
   HAL_TIM_Base_Start(&htim11);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // PA6
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // PA6
+  //HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1); // PA8
+  uint32_t arr2 = __HAL_TIM_GET_AUTORELOAD(&htim1);
+  uint32_t cnt = __HAL_TIM_GET_COUNTER(&htim1);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (cnt + 1000) % (arr2 + 1)); // pierwszy „tik”
+  HAL_TIM_OC_Start_IT(&htim1, TIM_CHANNEL_1);
+  NVIC_SetPriority(TIM1_CC_IRQn, 0);
+  NVIC_EnableIRQ(TIM1_CC_IRQn);
   HandleOutput();
 
 
@@ -299,9 +416,8 @@ int main(void)
 
 	  uint16_t arr = __HAL_TIM_GET_AUTORELOAD(&htim3);
 	  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, pwm_from_y(y_val, arr));
-	  uint16_t arr2 = __HAL_TIM_GET_AUTORELOAD(&htim1);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwm_from_y(y_val, arr2));
 
+	  Stepper_SetFromAI(y_val); // stepmotor
 	  Graph_PushAndDraw(y_val, -1.2f, 1.2f, "AI_SIN", dur);
 
 	  x += step;
@@ -309,36 +425,9 @@ int main(void)
 
 	  HAL_Delay(20); // ~50 Hz
 
-	  /*
-	  sprintf(buff,"Out:%f ", y_val);
-	  SSD1306_Clear();
-	  SSD1306_GotoXY (0, 0);
-	  SSD1306_Puts (buff, &Font_11x18, 1);
-	  sprintf(buff,"Dur:%lu ", (htim11.Instance->CNT - timestamp));
-	  SSD1306_GotoXY (0, 20);
-	  SSD1306_Puts (buff, &Font_11x18, 1);
-	  SSD1306_UpdateScreen();
-
-	  HAL_Delay(500);
-
-	 */
-
-
-	  //DrawSineFrame(1.0);
-	  //AnimateSine();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //sprintf(buff,"%d C   ", temp);
-	  //SSD1306_GotoXY (50, 10);
-	  //SSD1306_Puts (buff, &Font_11x18, 1);
-//	  sprintf(strCopy,"%d.%d F   ", TFI, TFD);
-//	  SSD1306_GotoXY (0, 20);
-//	  SSD1306_Puts (strCopy, &Font_11x18, 1);
-//	  sprintf(strCopy,"%d.%d %%  ", RHI, RHD);
-//	  SSD1306_GotoXY (0, 40);
-//	  SSD1306_Puts (strCopy, &Font_11x18, 1);
-
   }
   /* USER CODE END 3 */
 }
@@ -610,6 +699,7 @@ static void MX_TIM11_Init(void)
   }
   /* USER CODE BEGIN TIM11_Init 2 */
 
+
   /* USER CODE END TIM11_Init 2 */
 
 }
@@ -632,16 +722,35 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Led_GREEN_GPIO_Port, Led_GREEN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, STP_IN1_Pin|STP_IN2_Pin|STP_IN3_Pin|STP_IN4_Pin
+                          |Led_GREEN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Led_GREEN_Pin */
-  GPIO_InitStruct.Pin = Led_GREEN_Pin;
+  /*Configure GPIO pins : STP_IN1_Pin STP_IN2_Pin STP_IN3_Pin STP_IN4_Pin
+                           Led_GREEN_Pin */
+  GPIO_InitStruct.Pin = STP_IN1_Pin|STP_IN2_Pin|STP_IN3_Pin|STP_IN4_Pin
+                          |Led_GREEN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Led_GREEN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+  //GPIO_InitTypeDef GPIO_InitStruct = {0};
+  //__HAL_RCC_GPIOB_CLK_ENABLE();
+
+  GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull  = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStruct.Pin = STP_IN1_Pin; HAL_GPIO_Init(STP_IN1_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN2_Pin; HAL_GPIO_Init(STP_IN2_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN3_Pin; HAL_GPIO_Init(STP_IN3_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = STP_IN4_Pin; HAL_GPIO_Init(STP_IN4_GPIO_Port, &GPIO_InitStruct);
+
+  HAL_GPIO_WritePin(STP_IN1_GPIO_Port, STP_IN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN2_GPIO_Port, STP_IN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN3_GPIO_Port, STP_IN3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(STP_IN4_GPIO_Port, STP_IN4_Pin, GPIO_PIN_RESET);
 
   /* USER CODE END MX_GPIO_Init_2 */
 }
