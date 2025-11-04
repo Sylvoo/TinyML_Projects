@@ -1,0 +1,32 @@
+# STM32CubeIDE / Eclipse
+.metadata/
+.settings/
+*.launch
+
+# Build outputs / artefakty
+Debug/
+Release/
+build/
+*.o
+*.d
+*.su
+*.map
+*.lst
+*.s19
+*.bin
+*.hex
+*.elf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / temp
+*.log
+*.tmp
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake-build-*/
+compile_commands.json

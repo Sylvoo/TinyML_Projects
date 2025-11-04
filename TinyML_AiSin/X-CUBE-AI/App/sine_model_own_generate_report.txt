@@ -1,0 +1,198 @@
+ST Edge AI Core v2.2.0-20266 2adc00962
+Created date          : 2025-11-04 12:42:17
+Parameters            : generate --target stm32f4 --name sine_model_own -m C:/Users/21syl/Downloads/sine_model_quantized (1).tflite --compression none --verbosity 1 --workspace C:/Users/21syl/AppData/Local/Temp/mxAI_workspace396582061570014225439113408319251 --output C:/Users/21syl/.stm32cubemx/sine_model_own_output
+
+Exec/report summary (generate)
+-----------------------------------------------------------------------------------------------------------
+model file         :   C:\Users\21syl\Downloads\sine_model_quantized (1).tflite                            
+type               :   tflite                                                                              
+c_name             :   sine_model_own                                                                      
+compression        :   none                                                                                
+options            :   allocate-inputs, allocate-outputs                                                   
+optimization       :   balanced                                                                            
+target/series      :   stm32f4                                                                             
+workspace dir      :   C:\Users\21syl\AppData\Local\Temp\mxAI_workspace396582061570014225439113408319251   
+output dir         :   C:\Users\21syl\.stm32cubemx\sine_model_own_output                                   
+model_fmt          :   ss/sa per channel                                                                   
+model_name         :   sine_model_quantized_1                                                              
+model_hash         :   0x391791a750b6977c7f4fc39cae999058                                                  
+params #           :   321 items (420 B)                                                                   
+-----------------------------------------------------------------------------------------------------------
+input 1/1          :   'serving_default_ke.._tensor_40', f32(1x1), 4 Bytes, activations                    
+output 1/1         :   'conversion_4', f32(1x1), 4 Bytes, activations                                      
+macc               :   325                                                                                 
+weights (ro)       :   420 B (420 B) (1 segment) / -864(-67.3%) vs float model                             
+activations (rw)   :   224 B (224 B) (1 segment) *                                                         
+ram (total)        :   224 B (224 B) = 224 + 0 + 0                                                         
+-----------------------------------------------------------------------------------------------------------
+(*) 'input'/'output' buffers are allocated in the activations buffer
+
+Model name - sine_model_quantized_1
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+m_id   layer (type,original)                      oshape        param/size     macc                     connected to   | c_size         c_macc          c_type              
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+0      serving_default_ke.._tensor_40 (Input, )   [b:1,c:1]                                                            |                +2(+100.0%)     Conversion_[0]      
+       conversion_0 (Conversion, QUANTIZE)        [b:1,c:1]                       2   serving_default_ke.._tensor_40   |                -2(-100.0%)     
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+1      tfl_pseudo_qconst5 (Placeholder, )         [b:16,c:1]    16/16                                                  | +64(+400.0%)   +32(+100.0%)    Dense_[1]           
+       tfl_pseudo_qconst4 (Placeholder, )         [b:16]        16/64                                                  | -64(-100.0%)                   
+       gemm_1 (Gemm, FULLY_CONNECTED)             [b:1,c:16]                     32                     conversion_0   |                -32(-100.0%)    
+                                                                                                  tfl_pseudo_qconst5   | 
+                                                                                                  tfl_pseudo_qconst4   | 
+       nl_1_nl (Nonlinearity, FULLY_CONNECTED)    [b:1,c:16]                     16                           gemm_1   |                -16(-100.0%)    
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+2      tfl_pseudo_qconst3 (Placeholder, )         [b:16,c:16]   256/256                                                | +64(+25.0%)    +272(+100.0%)   Dense_[2]           
+       tfl_pseudo_qconst2 (Placeholder, )         [b:16]        16/64                                                  | -64(-100.0%)                   
+       gemm_2 (Gemm, FULLY_CONNECTED)             [b:1,c:16]                    272                          nl_1_nl   |                -272(-100.0%)   
+                                                                                                  tfl_pseudo_qconst3   | 
+                                                                                                  tfl_pseudo_qconst2   | 
+       nl_2_nl (Nonlinearity, FULLY_CONNECTED)    [b:1,c:16]                     16                           gemm_2   |                -16(-100.0%)    
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+3      tfl_pseudo_qconst1 (Placeholder, )         [b:1,c:16]    16/16                                                  | +4(+25.0%)     +17(+100.0%)    Dense_[3]           
+       tfl_pseudo_qconst (Placeholder, )          [b:1]         1/4                                                    | -4(-100.0%)                    
+       gemm_3 (Gemm, FULLY_CONNECTED)             [b:1,c:1]                      17                          nl_2_nl   |                -17(-100.0%)    
+                                                                                                  tfl_pseudo_qconst1   | 
+                                                                                                   tfl_pseudo_qconst   | 
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+4      conversion_4 (Conversion, DEQUANTIZE)      [b:1,c:1]                       2                           gemm_3   |                                Conversion_[o][4]   
+------ ------------------------------------------ ------------- ------------ ------ -------------------------------- --- -------------- --------------- ------------------- 
+model/c-model: macc=357/325 -32(-9.0%) weights=420/420  activations=--/224 io=--/0
+
+
+
+Generated C-graph summary
+------------------------------------------------------------------------------------------------------------------------
+model name            : sine_model_quantized_1
+c-name                : sine_model_own
+c-node #              : 5
+c-array #             : 15
+activations size      : 224 (1 segment)
+weights size          : 420 (1 segment)
+macc                  : 325
+inputs                : ['serving_default_keras_tensor_40_output']
+outputs               : ['conversion_4_output']
+
+C-Arrays (15)
+------ ---------------------------------------- ----------- ------------------------- ----------- --------- 
+c_id   name (*_array)                           item/size   domain/mem-pool           c-type      comment   
+------ ---------------------------------------- ----------- ------------------------- ----------- --------- 
+0      conversion_0_output                      1/1         activations/**default**   s8                    
+1      conversion_4_output                      1/4         activations/**default**   float       /output   
+2      gemm_1_bias                              16/64       weights/weights           const s32             
+3      gemm_1_output                            16/16       activations/**default**   s8                    
+4      gemm_1_scratch0                          81/162      activations/**default**   s16                   
+5      gemm_1_weights                           16/16       weights/weights           const s8              
+6      gemm_2_bias                              16/64       weights/weights           const s32             
+7      gemm_2_output                            16/16       activations/**default**   s8                    
+8      gemm_2_scratch0                          96/192      activations/**default**   s16                   
+9      gemm_2_weights                           256/256     weights/weights           const s8              
+10     gemm_3_bias                              1/4         weights/weights           const s32             
+11     gemm_3_output                            1/1         activations/**default**   s8                    
+12     gemm_3_scratch0                          16/32       activations/**default**   s16                   
+13     gemm_3_weights                           16/16       weights/weights           const s8              
+14     serving_default_keras_tensor_40_output   1/4         activations/**default**   float       /input    
+------ ---------------------------------------- ----------- ------------------------- ----------- --------- 
+
+C-Layers (5)
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+c_id   name (*_layer)   id   layer_type    macc   rom   tensors                                     shape (array id)   
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+0      conversion_0     0    Conversion    2      0     I: serving_default_keras_tensor_40_output   f32(1x1) (14)      
+                                                        O: conversion_0_output                      int8(1x1) (0)      
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+1      gemm_1           1    Dense         32     80    I: conversion_0_output                      int8(1x1) (0)      
+                                                        S: gemm_1_scratch0                                             
+                                                        W: gemm_1_weights                           int8(16x1) (5)     
+                                                        W: gemm_1_bias                              int32(16) (2)      
+                                                        O: gemm_1_output                            int8(1x16) (3)     
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+2      gemm_2           2    Dense         272    320   I: gemm_1_output                            int8(1x16) (3)     
+                                                        S: gemm_2_scratch0                                             
+                                                        W: gemm_2_weights                           int8(16x16) (9)    
+                                                        W: gemm_2_bias                              int32(16) (6)      
+                                                        O: gemm_2_output                            int8(1x16) (7)     
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+3      gemm_3           3    Dense         17     20    I: gemm_2_output                            int8(1x16) (7)     
+                                                        S: gemm_3_scratch0                                             
+                                                        W: gemm_3_weights                           int8(1x16) (13)    
+                                                        W: gemm_3_bias                              int32(1) (10)      
+                                                        O: gemm_3_output                            int8(1x1) (11)     
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+4      conversion_4     4    Conversion    2      0     I: gemm_3_output                            int8(1x1) (11)     
+                                                        O: conversion_4_output                      f32(1x1) (1)       
+------ ---------------- ---- ------------- ------ ----- ------------------------------------------- ------------------ 
+
+
+
+Number of operations per c-layer
+------- ------ --------------------------- ----- ------------- 
+c_id    m_id   name (type)                   #op          type 
+------- ------ --------------------------- ----- ------------- 
+0       0      conversion_0 (Conversion)       2   smul_f32_s8 
+1       1      gemm_1 (Dense)                 32    smul_s8_s8 
+2       2      gemm_2 (Dense)                272    smul_s8_s8 
+3       3      gemm_3 (Dense)                 17    smul_s8_s8 
+4       4      conversion_4 (Conversion)       2   smul_s8_f32 
+------- ------ --------------------------- ----- ------------- 
+total                                        325 
+
+Number of operation types
+---------------- ----- ----------- 
+operation type       #           % 
+---------------- ----- ----------- 
+smul_f32_s8          2        0.6% 
+smul_s8_s8         321       98.8% 
+smul_s8_f32          2        0.6% 
+
+Complexity report (model)
+------ --------------------------------- ------------------------- ------------------------- ------ 
+m_id   name                              c_macc                    c_rom                     c_id   
+------ --------------------------------- ------------------------- ------------------------- ------ 
+0      serving_default_keras_tensor_40   |                  0.6%   |                  0.0%   [0]    
+1      tfl_pseudo_qconst5                ||                 9.8%   ||||              19.0%   [1]    
+2      tfl_pseudo_qconst3                ||||||||||||||||  83.7%   ||||||||||||||||  76.2%   [2]    
+3      tfl_pseudo_qconst1                |                  5.2%   |                  4.8%   [3]    
+4      conversion_4                      |                  0.6%   |                  0.0%   [4]    
+------ --------------------------------- ------------------------- ------------------------- ------ 
+macc=325 weights=420 act=224 ram_io=0
+ 
+ Requested memory size by section - "stm32f4" target
+ ------------------------------ -------- -------- ------- ----- 
+ module                             text   rodata    data   bss 
+ ------------------------------ -------- -------- ------- ----- 
+ NetworkRuntime1020_CM4_GCC.a     11,344        0       0     0 
+ sine_model_own.o                    568      337   1,824   128 
+ sine_model_own_data.o                48       16      88     0 
+ lib (toolchain)*                  3,580       24       0     0 
+ ------------------------------ -------- -------- ------- ----- 
+ RT total**                       15,540      377   1,912   128 
+ ------------------------------ -------- -------- ------- ----- 
+ weights                               0      424       0     0 
+ activations                           0        0       0   224 
+ io                                    0        0       0     0 
+ ------------------------------ -------- -------- ------- ----- 
+ TOTAL                            15,540      801   1,912   352 
+ ------------------------------ -------- -------- ------- ----- 
+ *  toolchain objects (libm/libgcc*)
+ ** RT AI runtime objects (kernels+infrastructure)
+  
+  Summary - "stm32f4" target
+  ---------------------------------------------------
+               FLASH (ro)      %*   RAM (rw)       % 
+  ---------------------------------------------------
+  RT total         17,829   97.7%      2,040   90.1% 
+  ---------------------------------------------------
+  TOTAL            18,253              2,264         
+  ---------------------------------------------------
+  *  rt/total
+
+
+Generated files (7)
+-------------------------------------------------------------------------------- 
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own_data_params.h   
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own_data_params.c   
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own_data.h          
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own_data.c          
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own_config.h        
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own.h               
+C:\Users\21syl\.stm32cubemx\sine_model_own_output\sine_model_own.c               
