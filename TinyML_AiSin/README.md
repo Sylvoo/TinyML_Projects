@@ -4,6 +4,7 @@
 **Płytka/MCU:** STM32F401CEU6 (rodzina F4)  
 **Model:** sieć neuronowa przewidująca wartość sin(x) dla `x ∈ [-2π, 2π]`  
 **Wyświetlacz:** OLED SSD1306 (I²C, 128×64) – przebieg + czas inferencji
+**Lokalizacja** Core -> Src
 
 > Projekt prezentuje prosty „tiny” model ML działający w MCU: dla kolejnych wartości `x` sieć oblicza `sin(x)` i rysuje wynik na OLED-zie wraz z linią odniesienia i czasem inferencji w mikrosekundach.
 
