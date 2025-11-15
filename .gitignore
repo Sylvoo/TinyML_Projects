@@ -7,6 +7,9 @@
 Debug/
 Release/
 build/
+repo_tflite/
+.ai/
+TinyML_STM_Ai/
 *.o
 *.d
 *.su
@@ -16,6 +19,7 @@ build/
 *.bin
 *.hex
 *.elf
+*-amd64.exe
 
 # OS
 .DS_Store

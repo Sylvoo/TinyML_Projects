@@ -307,37 +307,7 @@ int main(void)
 	  x += step;
 	  if (x > 2.0f * (float)M_PI) x -= 2.0f * (float)M_PI;
 
-	  HAL_Delay(20); // ~50 Hz
-
-	  /*
-	  sprintf(buff,"Out:%f ", y_val);
-	  SSD1306_Clear();
-	  SSD1306_GotoXY (0, 0);
-	  SSD1306_Puts (buff, &Font_11x18, 1);
-	  sprintf(buff,"Dur:%lu ", (htim11.Instance->CNT - timestamp));
-	  SSD1306_GotoXY (0, 20);
-	  SSD1306_Puts (buff, &Font_11x18, 1);
-	  SSD1306_UpdateScreen();
-
-	  HAL_Delay(500);
-
-	 */
-
-
-	  //DrawSineFrame(1.0);
-	  //AnimateSine();
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-	  //sprintf(buff,"%d C   ", temp);
-	  //SSD1306_GotoXY (50, 10);
-	  //SSD1306_Puts (buff, &Font_11x18, 1);
-//	  sprintf(strCopy,"%d.%d F   ", TFI, TFD);
-//	  SSD1306_GotoXY (0, 20);
-//	  SSD1306_Puts (strCopy, &Font_11x18, 1);
-//	  sprintf(strCopy,"%d.%d %%  ", RHI, RHD);
-//	  SSD1306_GotoXY (0, 40);
-//	  SSD1306_Puts (strCopy, &Font_11x18, 1);
+	  HAL_Delay(20);
 
   }
   /* USER CODE END 3 */
